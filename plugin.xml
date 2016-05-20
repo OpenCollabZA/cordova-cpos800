@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	id="cordova-finclude-printer"
+	version="1.0.0">
+
+	<name>Finclude printer for cordova</name>
+	<description>Finclude pritner plugin for cordova</description>
+	<author>OPENCOLLAB</author>
+
+	<engines>
+		<engine name="cordova-android" version=">=5.1.1" />
+	</engines>
+
+	<js-module src="www/FincludePrinter.js" name="FincludePrinter">
+		<clobbers target="window.plugins.FincludePrinter" />
+	</js-module>
+
+	<platform name="android">
+		<!-- Replace the default implementation with the Android implementation -->
+		<js-module src="www/android/FincludePrinter.js" name="androidFincludePrinter">
+			 <merges target="window.plugins.FincludePrinter" />
+		</js-module>
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="FincludePrinter">
+				<param name="android-package" value="com.qmuzik.finclude.printer.FincludePrinter"/>
+			</feature>
+		</config-file>
+		<source-file src="src/android/FincludePrinter.java" target-dir="src/com/qmuzik/finclude/printer" />
+	</platform>
+</plugin>

@@ -1,0 +1,12 @@
+# top-most EditorConfig file
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_style = tab
+tab_width = 4
+insert_final_newline = true
+
+[.cordova/hooks/before_prepare/000-browserify.js]
+end_of_line = lf
