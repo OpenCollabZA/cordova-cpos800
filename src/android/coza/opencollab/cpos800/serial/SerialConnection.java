@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import android_serialport_api.SerialPort;
-import finclude.net.fincludenfc.DataTools;
+import coza.opencollab.cpos800.DataTools;
 
 /**
  * Created by charl on 2017/05/31.

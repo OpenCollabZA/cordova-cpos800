@@ -38,7 +38,7 @@
 
 		<!-- Copy other files -->
 		<source-file src="src/android/coza/opencollab/cpos800/AsyncCallback.java" target-dir="src/coza/opencollab/cpos800" />
-		<source-file src="src/android/coza/opencollab/cpos800/CPOS8000.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/coza/opencollab/cpos800/CPOS800.java" target-dir="src/coza/opencollab/cpos800" />
 		<source-file src="src/android/coza/opencollab/cpos800/DataTools.java" target-dir="src/coza/opencollab/cpos800" />
 	</platform>
 </plugin>
