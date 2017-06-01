@@ -27,18 +27,23 @@
 			</feature>
 		</config-file>
 		<!-- Copy Serial port JNI interface-->
-		<source-file src="src/android/android_serialport_api/SerialPort.java" target-dir="src/android_serialport_api" />
+		<source-file src="src/android/java/android_serialport_api/SerialPort.java" target-dir="src/android_serialport_api" />
 
 		<!-- Copy NFC files -->
-		<source-file src="src/android/coza/opencollab/cpos800/nfc/NfcApi.java" target-dir="src/coza/opencollab/cpos800/nfc" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/nfc/NfcApi.java" target-dir="src/coza/opencollab/cpos800/nfc" />
 
 		<!-- Copy serial files -->
-		<source-file src="src/android/coza/opencollab/cpos800/serial/SerialConnection.java" target-dir="src/coza/opencollab/cpos800/serial" />
-		<source-file src="src/android/coza/opencollab/cpos800/serial/SerialManager.java" target-dir="src/coza/opencollab/cpos800/serial" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/serial/SerialConnection.java" target-dir="src/coza/opencollab/cpos800/serial" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/serial/SerialManager.java" target-dir="src/coza/opencollab/cpos800/serial" />
 
 		<!-- Copy other files -->
-		<source-file src="src/android/coza/opencollab/cpos800/AsyncCallback.java" target-dir="src/coza/opencollab/cpos800" />
-		<source-file src="src/android/coza/opencollab/cpos800/CPOS800.java" target-dir="src/coza/opencollab/cpos800" />
-		<source-file src="src/android/coza/opencollab/cpos800/DataTools.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/AsyncCallback.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/CPOS800.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/DataTools.java" target-dir="src/coza/opencollab/cpos800" />
+
+		<!-- Copy library files -->
+		<source-file src="src/android/libs/armeabi/libSerialPort.so" target-dir="libs/armeabi" />
+		<source-file src="src/android/libs/armeabi-v7a/libSerialPort.so" target-dir="libs/armeabi-v7a" />
+		<source-file src="src/android/libs/x86/libSerialPort.so" target-dir="libs/x86" />
 	</platform>
 </plugin>
