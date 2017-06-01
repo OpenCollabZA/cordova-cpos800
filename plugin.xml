@@ -19,13 +19,26 @@
 	<platform name="android">
 		<!-- Replace the default implementation with the Android implementation -->
 		<js-module src="www/android/CPOS800.js" name="androidFincludePrinter">
-			 <merges target="window.plugins.FincludePrinter" />
+			<merges target="window.plugins.CPOS800" />
 		</js-module>
 		<config-file target="res/xml/config.xml" parent="/*">
 			<feature name="CPOS800">
 				<param name="android-package" value="android.coza.opencollab.cpos800.CPOS800"/>
 			</feature>
 		</config-file>
-		<source-file src="src/android/CPOS800.java" target-dir="src/coza/opencollab/cpos800" />
+		<!-- Copy Serial port JNI interface-->
+		<source-file src="src/android/android_serialport_api/SerialPort.java" target-dir="src/android_serialport_api" />
+
+		<!-- Copy NFC files -->
+		<source-file src="src/android/coza/opencollab/cpos800/nfc/NfcApi.java" target-dir="src/coza/opencollab/cpos800/nfc" />
+
+		<!-- Copy serial files -->
+		<source-file src="src/android/coza/opencollab/cpos800/serial/SerialConnection.java" target-dir="src/coza/opencollab/cpos800/serial" />
+		<source-file src="src/android/coza/opencollab/cpos800/serial/SerialManager.java" target-dir="src/coza/opencollab/cpos800/serial" />
+
+		<!-- Copy other files -->
+		<source-file src="src/android/coza/opencollab/cpos800/AsyncCallback.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/coza/opencollab/cpos800/CPOS8000.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/coza/opencollab/cpos800/DataTools.java" target-dir="src/coza/opencollab/cpos800" />
 	</platform>
 </plugin>
