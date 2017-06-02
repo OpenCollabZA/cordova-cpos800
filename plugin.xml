@@ -18,12 +18,12 @@
 
 	<platform name="android">
 		<!-- Replace the default implementation with the Android implementation -->
-		<js-module src="www/android/CPOS800.js" name="androidFincludePrinter">
+		<js-module src="www/android/CPOS800.js" name="cpos800plugin">
 			<merges target="window.plugins.CPOS800" />
 		</js-module>
 		<config-file target="res/xml/config.xml" parent="/*">
-			<feature name="CPOS800">
-				<param name="android-package" value="android.coza.opencollab.cpos800.CPOS800"/>
+			<feature name="CPOS800Plugin">
+				<param name="android-package" value="coza.opencollab.cpos800.CPOS800Plugin"/>
 			</feature>
 		</config-file>
 		<!-- Copy Serial port JNI interface-->
@@ -38,7 +38,7 @@
 
 		<!-- Copy other files -->
 		<source-file src="src/android/java/coza/opencollab/cpos800/AsyncCallback.java" target-dir="src/coza/opencollab/cpos800" />
-		<source-file src="src/android/java/coza/opencollab/cpos800/CPOS800.java" target-dir="src/coza/opencollab/cpos800" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/CPOS800Plugin.java" target-dir="src/coza/opencollab/cpos800" />
 		<source-file src="src/android/java/coza/opencollab/cpos800/DataTools.java" target-dir="src/coza/opencollab/cpos800" />
 
 		<!-- Copy library files -->
