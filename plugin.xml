@@ -26,12 +26,13 @@
 				<param name="android-package" value="coza.opencollab.cpos800.cordova.CPOS800Plugin"/>
 			</feature>
 		</config-file>
-		
+
 		<!-- Copy Serial port JNI interface-->
 		<source-file src="src/android/java/android_serialport_api/SerialPort.java" target-dir="src/android_serialport_api" />
 
 		<!-- Copy cordova files -->
 		<source-file src="src/android/java/coza/opencollab/cpos800/cordova/CPOS800Plugin.java" target-dir="src/coza/opencollab/cpos800/cordova" />
+		<source-file src="src/android/java/coza/opencollab/cpos800/cordova/NoopApiCallback.java" target-dir="src/coza/opencollab/cpos800/cordova" />
 
 		<!-- Copy NFC files -->
 		<source-file src="src/android/java/coza/opencollab/cpos800/nfc/NfcApi.java" target-dir="src/coza/opencollab/cpos800/nfc" />

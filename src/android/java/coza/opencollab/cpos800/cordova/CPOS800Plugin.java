@@ -62,4 +62,9 @@ public class CPOS800Plugin extends CordovaPlugin {
 		return false;
 	}
 
+	@Override
+	public void onStop(){
+		NfcApi.getInstance().cancel(new NoopApiCallback());
+	}
+
 }

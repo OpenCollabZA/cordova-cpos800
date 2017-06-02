@@ -82,8 +82,14 @@ public class NfcApi {
                         }
                     }
                 } catch (IOException e) {
-                    Log.e(TAG, "Exception while trying to read card", e);
-                    callback.failed(new ApiFailure(ERROR_IO, "IO Error while reading card ID"));
+					if(cancelled){
+						Log.i(TAG, "Reading card got cancelled");
+	                    callback.failed(new ApiFailure(ERROR_CANCELLED, "Cancelled reading card"));
+					}
+					else{
+	                    Log.e(TAG, "Exception while trying to read card", e);
+	                    callback.failed(new ApiFailure(ERROR_IO, "IO Error while reading card ID"));
+					}
                 }
 
                 if(!foundCard) {

@@ -51,6 +51,14 @@ public class SerialManager {
         serialConnection = new SerialConnection(serialPort);
     }
 
+	public synchronized void closeSerialPort(){
+		if(serialConnection == null){
+            Log.d(TAG, "Serial port is not open");
+            return;
+        }
+		serialConnection.close();
+	}
+
     public void write(byte[] bytes) throws IOException {
         serialConnection.write(bytes);
     }
