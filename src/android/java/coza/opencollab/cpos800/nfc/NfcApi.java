@@ -7,9 +7,10 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import coza.opencollab.cpos800.DataTools;
 import coza.opencollab.cpos800.serial.SerialManager;
-import coza.opencollab.cpos800.AsyncCallback;
+import coza.opencollab.cpos800.ApiCallback;
+import coza.opencollab.cpos800.ApiFailure;
+import coza.opencollab.cpos800.DataTools;
 
 /**
  * API to work with the NFC
@@ -20,7 +21,25 @@ public class NfcApi {
     private static final byte[] CMD_GET_ID = {0x08, 0x00, 0x01, 0x01, (byte)0xe3};
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
+	/**
+	  * Error code when there was a timeout waiting for a tag to be read.
+	  */
+	private static final int ERROR_TIMEOUT = 1;
+
+	/**
+	  * Error code when the user cancelled reading a tag while we where still waiting
+	  * for a tag.
+	  */
+	private static final int ERROR_CANCELLED = 2;
+
+	/**
+	  * IO Exception trying to read card id.
+	  */
+	private static final int ERROR_IO = 3;
+
     private static NfcApi instance;
+
+	private boolean cancelled = false;
 
     public static NfcApi getInstance(){
         if(instance == null){
@@ -29,19 +48,25 @@ public class NfcApi {
         return instance;
     }
 
-    public void getCardId(final AsyncCallback<byte[]> callback){
+	public void cancel(final ApiCallback<String> callback){
+		this.cancelled = true;
+		callback.success("cancelled");
+	}
+
+    public void getCardId(final ApiCallback<byte[]> callback){
         executorService.execute(new Runnable() {
             @Override
             public void run() {
+				cancelled = false;
                 Log.d(TAG, "getCardId()");
                 final SerialManager serialManager = SerialManager.getInstance();
                 boolean foundCard = false;
                 try {
                     serialManager.openSerialPort();
-                    int tries = 100, attempts = 0;
+                    int tries = 50, attempts = 0;
 
                     final byte[] readBuffer = new byte[1024];
-                    while(!foundCard && attempts < tries) {
+                    while(!cancelled && !foundCard && attempts < tries) {
                         attempts++;
                         SystemClock.sleep(100);
                         serialManager.write(CMD_GET_ID);
@@ -58,12 +83,18 @@ public class NfcApi {
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "Exception while trying to read card", e);
-                    callback.failed(e);
+                    callback.failed(new ApiFailure(ERROR_IO, "IO Error while reading card ID"));
                 }
 
                 if(!foundCard) {
-                    Log.i(TAG, "Never got a tag in time");
-                    callback.failed(null);
+					if(cancelled){
+						Log.i(TAG, "Reading card got cancelled");
+	                    callback.failed(new ApiFailure(ERROR_CANCELLED, "Cancelled reading card"));
+					}
+					else{
+	                    Log.i(TAG, "Timeout reading Tag");
+	                    callback.failed(new ApiFailure(ERROR_TIMEOUT, "Timeout reading Tag"));
+					}
                 }
             }
         });

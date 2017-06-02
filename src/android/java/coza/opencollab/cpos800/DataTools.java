@@ -13,9 +13,6 @@ public class DataTools {
         StringBuilder sb = new StringBuilder(a.length * 2);
         for(int i = 0 ; i < length ; i++) {
             sb.append(String.format("%02x", a[i]));
-            if(i < length -1){
-                sb.append(":");
-            }
         }
         return sb.toString();
     }
