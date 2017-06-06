@@ -13,6 +13,10 @@ public class ApiFailure{
 		this.message = message;
 	}
 
+	public String getMessage(){
+		return this.message;
+	}
+
 	public JSONObject toJsonObject(){
 		try{
 			JSONObject json = new JSONObject();

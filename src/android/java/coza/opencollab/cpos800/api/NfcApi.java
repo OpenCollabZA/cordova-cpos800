@@ -1,4 +1,4 @@
-package coza.opencollab.cpos800.nfc;
+package coza.opencollab.cpos800.api;
 
 import android.os.SystemClock;
 import android.util.Log;
@@ -62,7 +62,7 @@ public class NfcApi {
                 final SerialManager serialManager = SerialManager.getInstance();
                 boolean foundCard = false;
                 try {
-                    serialManager.openSerialPort();
+                    serialManager.openSerialPort(SerialManager.SerialInterface.NFC);
                     int tries = 50, attempts = 0;
 
                     final byte[] readBuffer = new byte[1024];

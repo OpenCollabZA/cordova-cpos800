@@ -11,7 +11,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.webkit.MimeTypeMap;
 
-import coza.opencollab.cpos800.nfc.NfcApi;
+import coza.opencollab.cpos800.api.NfcApi;
+import coza.opencollab.cpos800.api.PrinterApi;
 import coza.opencollab.cpos800.DataTools;
 import coza.opencollab.cpos800.ApiCallback;
 import coza.opencollab.cpos800.ApiFailure;

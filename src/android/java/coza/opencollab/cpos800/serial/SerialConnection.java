@@ -178,7 +178,7 @@ public class SerialConnection {
                         // Copy read bytes into buffer
                         System.arraycopy(buffer, 0, readBuffer, readBufferSize, length);
                         readBufferSize+= length;
-                        Log.d(TAG, "ReadBuffer=" + DataTools.byteArrayToHex(readBuffer, readBufferSize));
+                        Log.d(TAG, "ReadBuffer=" + DataTools.byteArrayToHex(readBuffer, readBufferSize, true));
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "Exception while reading input stream", e);
