@@ -14,11 +14,14 @@ module.exports = {
 	  * IO Exception trying to read card id.
 	  */
 	ERROR_IO : 3,
-	
+
 	getCardId : function(successCallback, errorCallback){
 		cordova.exec(successCallback, errorCallback, "CPOS800Plugin", "getCardId", []);
 	},
 	cancelReadTagId : function(successCallback, errorCallback){
 		cordova.exec(successCallback, errorCallback, "CPOS800Plugin", "cancelReadTagId", []);
+	},
+	printText : function(text, successCallback, errorCallback){
+		cordova.exec(successCallback, errorCallback, "CPOS800Plugin", "printText", [text]);
 	}
 };

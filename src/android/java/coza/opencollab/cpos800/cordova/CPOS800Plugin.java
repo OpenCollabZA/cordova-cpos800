@@ -15,6 +15,7 @@ import coza.opencollab.cpos800.api.NfcApi;
 import coza.opencollab.cpos800.api.PrinterApi;
 import coza.opencollab.cpos800.DataTools;
 import coza.opencollab.cpos800.ApiCallback;
+import coza.opencollab.cpos800.ApiPrintingCallback;
 import coza.opencollab.cpos800.ApiFailure;
 
 public class CPOS800Plugin extends CordovaPlugin {
@@ -22,6 +23,7 @@ public class CPOS800Plugin extends CordovaPlugin {
 	private static final String TAG = "CPOS800";
 	private static final String EXEC_GET_CARD_ID = "getCardId";
 	private static final String EXEC_CANCEL_CARD_ID = "cancelReadTagId";
+	private static final String EXEC_PRINT_TEXT = "printText";
 
 
 
@@ -55,6 +57,21 @@ public class CPOS800Plugin extends CordovaPlugin {
 				@Override
 				public void failed(final ApiFailure failure) {
 					Log.d(TAG, "Exception while trying to read card");
+					callbackContext.error(failure.toJsonObject());
+				}
+			});
+			return true;
+		}
+		else if (EXEC_PRINT_TEXT.equals(action)) {
+			PrinterApi.getInstance().printText(args.getString(0), new ApiPrintingCallback() {
+				@Override
+				public void success() {
+					callbackContext.success();
+				}
+
+				@Override
+				public void failed(final ApiFailure failure) {
+					Log.d(TAG, "Exception while trying to print");
 					callbackContext.error(failure.toJsonObject());
 				}
 			});
