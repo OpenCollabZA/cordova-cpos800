@@ -99,6 +99,9 @@ public class PrinterApi {
     }
 
     public void printText(final String text, final ApiPrintingCallback callback){
+        // Printing must end with a new line
+        final String printingText = text.endsWith("\n") ? text : text + "\n";
+
         Log.d(TAG, "printText()");
         executorService.execute(new Runnable() {
             @Override
@@ -114,7 +117,7 @@ public class PrinterApi {
                         SystemClock.sleep(500);
                     }
                     // Package and write the commands to the serial port
-                    serialManager.write(packageData(text.getBytes("GBK")));
+                    serialManager.write(packageData(printingText.getBytes("GBK")));
                     /**
                      * The printer almost immediately return a 0x02, and only when it is completed
                      * does it return the 0x08
@@ -172,3 +175,4 @@ public class PrinterApi {
 
     }
 }
+
