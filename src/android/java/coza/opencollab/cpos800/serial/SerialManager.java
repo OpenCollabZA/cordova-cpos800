@@ -3,29 +3,44 @@ package coza.opencollab.cpos800.serial;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android_serialport_api.SerialPort;
 
 /**
- * Created by charl on 2017/05/31.
+ * Serial Manager
  */
-
 public class SerialManager {
-    private static final String TAG = "SerialManager";
 
+    /**
+     * Logging tag.
+     */
+    private static final String TAG = "SerialManager";
 
     /**
      * Reference to the singleton serial manager
      */
     private static SerialManager serialManager;
 
+    /**
+     * Reference to the current serial interface.
+     */
     private SerialConnection serialConnection;
 
+    /**
+     * GPIO file to configure for the printer
+     */
     private static final String GPIO_PRINTER = "/sys/class/cw_gpios/printer_en/enable";
+
+    /**
+     * Data to write to enable a GPIO.
+     */
     private static final byte[] GPIO_ENABLE = { '1' };
+
+    /**
+     * Data to write to disable a GPIO.
+     */
     private static final byte[] GPIO_DISABLE = { '0' };
 
     /**
@@ -40,11 +55,11 @@ public class SerialManager {
     /**
      * Serial interface that is currently open
      */
-    private SerialInterface currentInterace = SerialInterface.NONE;
+    private SerialInterface currentInterface = SerialInterface.NONE;
 
     /**
      * Get an instance of the serial manager
-     * @return
+     * @return instance of the serial manager.
      */
     public static SerialManager getInstance(){
         if(serialManager == null){
@@ -60,22 +75,25 @@ public class SerialManager {
 
 
     /**
-     * Open the NFC Serial port
+     * Open a serial interface.
+     * @param serialInterface Serial interface to open.
+     * @return True if the serial port was already opened
+     * @throws IOException If there is IOException trying to open the serial port.
      */
-    public synchronized void openSerialPort(SerialInterface serialInterface) throws IOException {
+    public synchronized boolean openSerialPort(SerialInterface serialInterface) throws IOException {
         // If we have a running connection
         if(serialConnection != null) {
-            if (serialInterface == currentInterace) {
+            if (serialInterface == currentInterface) {
                 Log.d(TAG, "Serial port already open");
-                return;
+                return true;
             }
-            else if(currentInterace != SerialInterface.NONE){
+            else if(currentInterface != SerialInterface.NONE){
                 Log.d(TAG, "Other serial connection is currently open, closing");
                 closeSerialPort();
             }
         }
-        currentInterace = serialInterface;
-        setGPIO(currentInterace, true);
+        currentInterface = serialInterface;
+        setGPIO(currentInterface, true);
         SerialPort serialPort;
         if(serialInterface == SerialInterface.NFC){
             serialPort = new SerialPort(new File("/dev/ttyHSL1"), 230400, 0);
@@ -84,8 +102,12 @@ public class SerialManager {
         }
 
         serialConnection = new SerialConnection(serialPort);
+        return false;
     }
 
+    /**
+     * Close the serial port.
+     */
 	public synchronized void closeSerialPort(){
 		if(serialConnection == null){
             Log.d(TAG, "Serial port is not open");
@@ -93,10 +115,15 @@ public class SerialManager {
         }
 		serialConnection.close();
         serialConnection = null;
-        setGPIO(currentInterace, false);
-        currentInterace = SerialInterface.NONE;
+        setGPIO(currentInterface, false);
+        currentInterface = SerialInterface.NONE;
 	}
 
+    /**
+     * Enable/Disable the GPIO configuration for the specified serial interface.
+     * @param serialInterface Serial interface to enable/disable
+     * @param enable Flag if the interface should be enabled or disable.
+     */
 	private void setGPIO(SerialInterface serialInterface, boolean enable){
         String gpioFile = null;
         if(serialInterface == SerialInterface.PRINTER){
@@ -122,10 +149,38 @@ public class SerialManager {
         }
     }
 
+    /**
+     * Get the size of the buffer currently read from the serial port.
+     * @return Number of bytes that has been read
+     */
+    public int getReadBufferSize(){
+        return this.serialConnection.getReadBufferSize();
+    }
+
+    /**
+     * Get the contents currently in the read buffer.
+     * @return The current contents of the read buffer.
+     */
+    public byte[] getReadBuffer(){
+        return this.serialConnection.getReadBuffer();
+    }
+
+    /**
+     * Write bytes to the currently open serial port.
+     * @param bytes Bytes to write.
+     * @throws IOException
+     */
     public void write(byte[] bytes) throws IOException {
         serialConnection.write(bytes);
     }
 
+    /**
+     * Reads a number of bytes from the serial port.
+     * @param buffer buffer to read into.
+     * @param processingTime Time to allow for processing before the transmission starts.
+     * @param transmitInterval Time to allow between data on the transmission.
+     * @return The number of bytes that has been read into the buffer.
+     */
     public int read(byte buffer[], int processingTime, int transmitInterval){
         return serialConnection.read(buffer, processingTime, transmitInterval);
     }

@@ -66,14 +66,16 @@ public class NfcApi {
                     int tries = 50, attempts = 0;
 
                     final byte[] readBuffer = new byte[1024];
+                    SystemClock.sleep(100);
                     while(!cancelled && !foundCard && attempts < tries) {
                         attempts++;
-                        SystemClock.sleep(100);
                         serialManager.write(CMD_GET_ID);
-                        int length = serialManager.read(readBuffer, 3000, 100);
-                        if (length == 4 && readBuffer[0]==8 && readBuffer[1] == 1 && readBuffer[3]==4) {
+                        int length = serialManager.read(readBuffer, 500, 100);
+                        if (length < 4 || (length == 4 && readBuffer[0]==8 && readBuffer[1] == 1 && readBuffer[3]==4)) {
                             // No card read
-                        } else {
+                            continue;
+                        }
+                        else {
                             // Copy the data to a new buffer that only contains the read bytes
                             byte[] data = new byte[length];
                             System.arraycopy(readBuffer, 0, data, 0, length);

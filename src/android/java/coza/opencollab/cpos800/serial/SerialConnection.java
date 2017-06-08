@@ -127,6 +127,14 @@ public class SerialConnection {
      */
     public void close(){
         this.readThread.interrupt();
+        try {
+            this.serialPort.getOutputStream().close();
+        } catch (IOException e) {
+        }
+        try {
+            this.serialPort.getInputStream().close();
+        } catch (IOException e) {
+        }
         this.serialPort.close();
     }
 
@@ -146,6 +154,22 @@ public class SerialConnection {
     public void write(byte[] bytes) throws IOException {
         resetReadBuffer();
         serialPort.getOutputStream().write(bytes);
+    }
+
+    /**
+     * Returns the current size of the read buffer.
+     * @return
+     */
+    public int getReadBufferSize(){
+        return this.readBufferSize;
+    }
+
+    /**
+     * Get the current buffer
+     * @return
+     */
+    public byte[] getReadBuffer(){
+        return this.readBuffer;
     }
 
     /**

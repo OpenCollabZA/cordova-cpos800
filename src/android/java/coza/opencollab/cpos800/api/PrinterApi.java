@@ -107,35 +107,54 @@ public class PrinterApi {
                 Log.d(TAG, "printing()");
                 final SerialManager serialManager = SerialManager.getInstance();
                 try {
-                    serialManager.openSerialPort(SerialManager.SerialInterface.PRINTER);
-                    final byte[] readBuffer = new byte[16];
+                    final boolean wasOpen = serialManager.openSerialPort(SerialManager.SerialInterface.PRINTER);
+
+                    // Give the serial port time to settle before start writing
+                    if(!wasOpen) {
+                        SystemClock.sleep(500);
+                    }
+                    // Package and write the commands to the serial port
                     serialManager.write(packageData(text.getBytes("GBK")));
                     /**
-                     * The printer almost imediately return a 0x02, and only when it is completed
-                     * does it return the 0x08, therefore the interval should be the overall
-                     * timeout for a print. The interval is only there as a safety for incase
-                     * the printer never responds, therefore it is safe to be a large value
+                     * The printer almost immediately return a 0x02, and only when it is completed
+                     * does it return the 0x08
                      */
-                    final int MAX_PRINTING_TIME = 45000; // 45 seconds
-                    int length = serialManager.read(readBuffer, 5000, 100);
-                    if (length == 2 && readBuffer[0] == 2) {
-                        if(readBuffer[1] == 1){
-                            Log.i(TAG, "Printer out of paper");
-                            callback.failed(new ApiFailure(1, "Printer out of paper"));
-                        }
-                        else if(readBuffer[1] == 4){
-                            Log.i(TAG, "Printer too hot");
-                            callback.failed(new ApiFailure(1, "Printer too hot"));
-                        }
-                        else if(readBuffer[1] == 8){
-                            Log.i(TAG, "Success printing");
-                            callback.success();
-                        }
+                    final long startTime = System.currentTimeMillis();
+                    final int MAX_PRINTING_TIME = 45000; // 45 seconds max time to print the text
+                    int readSize = serialManager.getReadBufferSize();
+                    boolean isDone = false;
+                    while(  // There is still more time allowed to wait for the response
+                            System.currentTimeMillis() - startTime < MAX_PRINTING_TIME &&
+                            // We received the 2 bytes we are waiting for
+                             !isDone) {
 
-                    } else {
-                        String returnCode = DataTools.byteArrayToHex(readBuffer, length, true);
+                        readSize = serialManager.getReadBufferSize();
+                        if(readSize >= 2) {
+                            isDone = true;
+                            final byte[] readBuffer = serialManager.getReadBuffer();
+                            if (readBuffer[0] == 2) {
+                                if (readBuffer[1] == 1) {
+                                    Log.i(TAG, "Printer out of paper");
+                                    callback.failed(new ApiFailure(1, "Printer out of paper"));
+                                } else if (readBuffer[1] == 4) {
+                                    Log.i(TAG, "Printer too hot");
+                                    callback.failed(new ApiFailure(1, "Printer too hot"));
+                                } else if (readBuffer[1] == 8) {
+                                    Log.i(TAG, "Success printing");
+                                    callback.success();
+                                }
+                            } else {
+                                String returnCode = DataTools.byteArrayToHex(readBuffer, readSize, true);
+                                Log.i(TAG, "Unexpected return code" + returnCode);
+                                callback.failed(new ApiFailure(ERROR_IO, "Unknown printing response code : " + returnCode));
+                            }
+                        }
+                    }
+                    // If we got here without being done, we timed out waiting for a response
+                    if(!isDone) {
+                        String returnCode = DataTools.byteArrayToHex(serialManager.getReadBuffer(), readSize, true);
                         Log.i(TAG, "Unexpected return code" + returnCode);
-                        callback.failed(new ApiFailure(1, "Unknown printing response code : " + returnCode));
+                        callback.failed(new ApiFailure(ERROR_TIMEOUT, "Unknown printing response code : " + returnCode));
                     }
                 } catch (IOException e) {
                     if(cancelled){
