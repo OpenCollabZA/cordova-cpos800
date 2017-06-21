@@ -3,10 +3,12 @@ package coza.opencollab.cpos800.serial;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android_serialport_api.SerialPort;
+import coza.opencollab.cpos800.DataTools;
 
 /**
  * Serial Manager
@@ -137,15 +139,24 @@ public class SerialManager {
      */
 	private void setGPIO(SerialInterface serialInterface, boolean enable){
         String gpioFile = null;
+        Log.i(TAG, String.format("Setting GPIO for %s to %s", serialInterface.toString(), enable ? "ENABLED" : "DISABLED"));
+
         if(serialInterface == SerialInterface.PRINTER){
             gpioFile = GPIO_PRINTER;
         }
 
         if(gpioFile != null){
             FileOutputStream fw = null;
+            FileInputStream fi = null;
+            byte[] buffer = new byte[10];
             try {
+
                 fw = new FileOutputStream(gpioFile);
+                fi = new FileInputStream(gpioFile);
                 fw.write(enable ? GPIO_ENABLE : GPIO_DISABLE);
+                fw.flush();
+                int size = fi.read(buffer);
+                Log.d(TAG, "GPIO=" + DataTools.byteArrayToHex(buffer, size, true));
             }catch (IOException e){
                 Log.e(TAG, "Exception while trying to set GPIO", e);
             }
@@ -153,6 +164,9 @@ public class SerialManager {
                 if(fw != null) {
                     try {
                         fw.close();
+                    } catch (IOException e) {}
+                    try {
+                        fi.close();
                     } catch (IOException e) {}
                 }
             }
