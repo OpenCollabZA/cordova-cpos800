@@ -20,7 +20,8 @@ public class PrinterApi {
 
     private static final String TAG = "PrinterApi";
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
+    private static final byte[] CMD_INIT_PRINTER = { 0x1B, 0x40 };// Initialize the printer
+    private static final byte[] CMD_ALIGN = { 0x1B, 0x61, 0x00 }; // Align command, default is left
     /**
      * Error code when there was a timeout waiting for a tag to be read.
      */
@@ -115,6 +116,12 @@ public class PrinterApi {
                     // Give the serial port time to settle before start writing
                     if(!wasOpen) {
                         SystemClock.sleep(500);
+                        Log.d(TAG, "Sending init commands");
+                        serialManager.write(packageData(CMD_INIT_PRINTER));
+                        SystemClock.sleep(200);
+                        Log.d(TAG, "Setting default alignment");
+                        serialManager.write(packageData(CMD_ALIGN));
+                        SystemClock.sleep(200);
                     }
                     // Package and write the commands to the serial port
                     serialManager.write(packageData(printingText.getBytes("GBK")));
@@ -149,6 +156,7 @@ public class PrinterApi {
                             } else {
                                 String returnCode = DataTools.byteArrayToHex(readBuffer, readSize, true);
                                 Log.i(TAG, "Unexpected return code" + returnCode);
+                                serialManager.closeSerialPort();
                                 callback.failed(new ApiFailure(ERROR_IO, "Unknown printing response code : " + returnCode));
                             }
                         }
@@ -157,6 +165,7 @@ public class PrinterApi {
                     if(!isDone) {
                         String returnCode = DataTools.byteArrayToHex(serialManager.getReadBuffer(), readSize, true);
                         Log.i(TAG, "Unexpected return code" + returnCode);
+                        serialManager.closeSerialPort();
                         callback.failed(new ApiFailure(ERROR_TIMEOUT, "Unknown printing response code : " + returnCode));
                     }
                 } catch (IOException e) {
@@ -166,6 +175,7 @@ public class PrinterApi {
                     }
                     else{
                         Log.e(TAG, "Exception while printing", e);
+                        serialManager.closeSerialPort();
                         callback.failed(new ApiFailure(ERROR_IO, "IO Error while printing"));
                     }
                 }
