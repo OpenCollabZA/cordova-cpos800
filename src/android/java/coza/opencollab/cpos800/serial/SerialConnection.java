@@ -127,6 +127,7 @@ public class SerialConnection {
      */
     public void close(){
         this.readThread.interrupt();
+        this.readThread = null;
         try {
             this.serialPort.getOutputStream().close();
         } catch (IOException e) {
@@ -141,7 +142,7 @@ public class SerialConnection {
     /**
      * Reset the read buffer to the start
      */
-    private void resetReadBuffer(){
+    private synchronized void resetReadBuffer(){
         Log.d(TAG, "Reset read buffer to start");
         readBufferSize = 0;
     }
@@ -151,7 +152,7 @@ public class SerialConnection {
      * @param bytes
      * @throws IOException
      */
-    public void write(byte[] bytes) throws IOException {
+    public synchronized void write(byte[] bytes) throws IOException {
         resetReadBuffer();
         serialPort.getOutputStream().write(bytes);
     }

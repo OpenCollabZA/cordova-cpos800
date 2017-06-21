@@ -57,13 +57,19 @@ public class SerialManager {
      */
     private SerialInterface currentInterface = SerialInterface.NONE;
 
+    private SerialPort serialPort;
+
     /**
      * Get an instance of the serial manager
      * @return instance of the serial manager.
      */
     public static SerialManager getInstance(){
         if(serialManager == null){
-            serialManager = new SerialManager();
+            synchronized (SerialManager.class) {
+                if(serialManager == null) {
+                    serialManager = new SerialManager();
+                }
+            }
         }
         return serialManager;
     }
@@ -94,7 +100,11 @@ public class SerialManager {
         }
         currentInterface = serialInterface;
         setGPIO(currentInterface, true);
-        SerialPort serialPort;
+
+        if(serialPort != null){
+            Log.w(TAG, "Other serial connection is STILL OPEN!");
+        }
+
         if(serialInterface == SerialInterface.NFC){
             serialPort = new SerialPort(new File("/dev/ttyHSL1"), 230400, 0);
         }else{
@@ -117,6 +127,7 @@ public class SerialManager {
         serialConnection = null;
         setGPIO(currentInterface, false);
         currentInterface = SerialInterface.NONE;
+        serialPort = null;
 	}
 
     /**
