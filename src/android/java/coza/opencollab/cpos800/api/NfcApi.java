@@ -70,6 +70,7 @@ public class NfcApi {
                     while(!cancelled && !foundCard && attempts < tries) {
                         attempts++;
                         serialManager.write(CMD_GET_ID);
+                        // TODO somehow detect if the serial changed to printer and give up
                         int length = serialManager.read(readBuffer, 500, 100);
                         if (length < 4 || (length == 4 && readBuffer[0]==8 && readBuffer[1] == 1 && readBuffer[3]==4)) {
                             // No card read

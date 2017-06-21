@@ -10,6 +10,10 @@ public class DataTools {
        return byteArrayToHex(a, a.length);
     }
 
+    public static String byteArrayToHex(byte[] a, boolean spacer) {
+        return byteArrayToHex(a, a.length, spacer);
+    }
+
     public static String byteArrayToHex(byte[] a, int length) {
         return byteArrayToHex(a, length, false);
     }
