@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import android_serialport_api.SerialPort;
 import coza.opencollab.cpos800.DataTools;
@@ -32,6 +33,9 @@ public class SerialManager {
      * GPIO file to configure for the printer
      */
     private static final String GPIO_PRINTER = "/sys/class/cw_gpios/printer_en/enable";
+    private static final String GPIO_STM32 = "/sys/class/stm32_gpio/stm32_en/enable";
+
+    private boolean isStm32 = fileIsExists(GPIO_STM32);
 
     /**
      * Data to write to enable a GPIO.
@@ -49,6 +53,7 @@ public class SerialManager {
     public enum SerialInterface{
         NFC,
         PRINTER,
+        STM32,
         NONE
     }
 
@@ -58,6 +63,10 @@ public class SerialManager {
     private SerialInterface currentInterface = SerialInterface.NONE;
 
     private SerialPort serialPort;
+
+    private InputStream inputStream = null;
+
+    private OutputStream outputStream = null;
 
     /**
      * Thread for reading the input stream
@@ -97,6 +106,18 @@ public class SerialManager {
     private SerialManager(){}
 
 
+    private boolean fileIsExists(String strFile) {
+        try {
+            File f = new File(strFile);
+            if (!f.exists()) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Open a serial interface.
      * @param serialInterface Serial interface to open.
@@ -118,16 +139,27 @@ public class SerialManager {
         currentInterface = serialInterface;
         setGPIO(currentInterface, true);
 
+
+        if (serialInterface == SerialInterface.PRINTER && isStm32) {
+            SystemClock.sleep(100);
+            setGPIO(SerialInterface.STM32, true);
+        }
+
         if(serialPort != null){
             Log.w(TAG, "Other serial connection is STILL OPEN!");
         }
+
+
+
 
         if(serialInterface == SerialInterface.NFC){
             serialPort = new SerialPort(new File("/dev/ttyHSL1"), 230400, 0);
         }else{
             serialPort = new SerialPort(new File("/dev/ttyHSL0"), 230400, 0);
         }
-        this.readThread = new SerialReadThread(this.serialPort.getInputStream());
+        this.outputStream = serialPort.getOutputStream();
+        this.inputStream = serialPort.getInputStream();
+        this.readThread = new SerialReadThread();
         this.readThread.start();
         return false;
     }
@@ -139,16 +171,21 @@ public class SerialManager {
         this.readThread.interrupt();
         this.readThread = null;
         try {
-            this.serialPort.getOutputStream().close();
+            this.outputStream.close();
         } catch (IOException e) {
         }
         try {
-            this.serialPort.getInputStream().close();
+            this.inputStream.close();
         } catch (IOException e) {
         }
         this.serialPort.close();
         setGPIO(currentInterface, false);
+        if (currentInterface == SerialInterface.PRINTER && isStm32) {
+            setGPIO(SerialInterface.STM32, false);
+        }
         currentInterface = SerialInterface.NONE;
+        this.outputStream = null;
+        this.inputStream = null;
         serialPort = null;
 	}
 
@@ -163,6 +200,9 @@ public class SerialManager {
 
         if(serialInterface == SerialInterface.PRINTER){
             gpioFile = GPIO_PRINTER;
+        }
+        else if(serialInterface == SerialInterface.STM32){
+            gpioFile = GPIO_STM32;
         }
 
         if(gpioFile != null){
@@ -280,7 +320,7 @@ public class SerialManager {
      */
     public synchronized void write(byte[] bytes) throws IOException {
         resetReadBuffer();
-        serialPort.getOutputStream().write(bytes);
+        this.outputStream.write(bytes);
     }
 
     /**
@@ -306,21 +346,16 @@ public class SerialManager {
 
         private static final String TAG = "SerialReadThread";
 
-        /**
-         * Reference to the input stream we are reading from
-         */
-        private final InputStream inputStream;
-
-
-        public SerialReadThread(InputStream inputStream){
-            this.inputStream = inputStream;
+        public SerialReadThread(){
         }
 
         @Override
         public void run() {
             byte[] buffer = new byte[1024];
             while (!isInterrupted()) {
-
+                if (inputStream == null) {
+                    return;
+                }
                 try {
                     int length = inputStream.read(buffer);
                     if(length > 0) {
@@ -333,13 +368,11 @@ public class SerialManager {
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "Exception while reading input stream", e);
+                    return;
                 }
             }
             // Close the input stream when the thread stops
-            try {
-                this.inputStream.close();
-            } catch (IOException e) {
-            }
+            serialPort.close();
         }
     }
 }

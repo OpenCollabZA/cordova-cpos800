@@ -116,9 +116,6 @@ public class PrinterApi {
                     // Give the serial port time to settle before start writing
                     if(!wasOpen) {
                         SystemClock.sleep(500);
-                        Log.d(TAG, "Sending init commands");
-                        serialManager.write(packageData(CMD_INIT_PRINTER));
-                        SystemClock.sleep(200);
                         Log.d(TAG, "Setting default alignment");
                         serialManager.write(packageData(CMD_ALIGN));
                         SystemClock.sleep(200);
@@ -130,7 +127,7 @@ public class PrinterApi {
                      * does it return the 0x08
                      */
                     final long startTime = System.currentTimeMillis();
-                    final int MAX_PRINTING_TIME = 45000; // 45 seconds max time to print the text
+                    final int MAX_PRINTING_TIME = 30000; // 30 seconds max time to print the text
                     int readSize = serialManager.getReadBufferSize();
                     boolean isDone = false;
                     while(  // There is still more time allowed to wait for the response

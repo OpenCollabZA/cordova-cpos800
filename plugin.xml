@@ -39,7 +39,6 @@
 		<source-file src="src/android/java/coza/opencollab/cpos800/api/PrinterApi.java" target-dir="src/coza/opencollab/cpos800/api" />
 
 		<!-- Copy serial files -->
-		<source-file src="src/android/java/coza/opencollab/cpos800/serial/SerialConnection.java" target-dir="src/coza/opencollab/cpos800/serial" />
 		<source-file src="src/android/java/coza/opencollab/cpos800/serial/SerialManager.java" target-dir="src/coza/opencollab/cpos800/serial" />
 
 		<!-- Copy other files -->
