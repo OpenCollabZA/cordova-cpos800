@@ -131,7 +131,7 @@ public class PrinterApi {
                 Log.d(TAG, "print() - Data Group Size: " + dataGroupSize);
                 System.arraycopy(data, MAX_DATA_SIZE * index, dataGroup, 0, dataGroupSize);
                 Log.d(TAG, "print() - Group Data: " + DataTools.byteArrayToHex(dataGroup, true));
-                serialManager.write(packageData(data, dataGroupSize));
+                serialManager.write(packageData(dataGroup, dataGroupSize));
             }
 
         }
