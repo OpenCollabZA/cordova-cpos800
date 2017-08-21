@@ -22,6 +22,8 @@ public class PrinterApi {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static final byte[] CMD_INIT_PRINTER = { 0x1B, 0x40 };// Initialize the printer
     private static final byte[] CMD_ALIGN = { 0x1B, 0x61, 0x00 }; // Align command, default is left
+
+    private static final int MAX_DATA_SIZE = 1000;
     /**
      * Error code when there was a timeout waiting for a tag to be read.
      */
@@ -60,7 +62,15 @@ public class PrinterApi {
      * @return The packaged instructrion
      */
     private static final byte[] packageData(byte[] sendingData) {
-        final int len = sendingData.length;
+       return packageData(sendingData, sendingData.length);
+    }
+    /**
+     * Package the instructions to send to the printer
+     *
+     * @param sendingData Instructions being sent to the printer
+     * @return The packaged instructrion
+     */
+    private static final byte[] packageData(byte[] sendingData, int len) {
         final byte[] sizeBytes = integerToBytes(len);
         final byte[] header = { (byte) 0xCA, (byte) 0xDF, (byte) 0x00, (byte) 0x35 };
 
@@ -99,9 +109,42 @@ public class PrinterApi {
         return targets;
     }
 
+    private void print(final byte[] data) throws IOException {
+        // Total length of the data we are sending
+        final int length = data.length;
+        Log.d(TAG, "print() - Total Length: " + length);
+        Log.d(TAG, "print() - Data: " + DataTools.byteArrayToHex(data, true));
+        final SerialManager serialManager = SerialManager.getInstance();
+        // Buffer for a grouping of data
+        byte[] dataGroup = new byte[MAX_DATA_SIZE];
+        int dataGroupSize = MAX_DATA_SIZE;
+        if(length > MAX_DATA_SIZE){
+            // The number of groups of data we are going to send
+            int numGroups = length / MAX_DATA_SIZE + (length % MAX_DATA_SIZE == 0 ? 0 : 1);
+            Log.d(TAG, "print() - Groups: " + numGroups);
+            for (int index = 0; index < numGroups; index++){
+                // If it is the last group, and the data remaining data does not fit into a full
+                // group, we have to calculate the remaining data to send
+                if(index == numGroups - 1 && (length % MAX_DATA_SIZE != 0)){
+                    dataGroupSize = length % MAX_DATA_SIZE;
+                }
+                Log.d(TAG, "print() - Data Group Size: " + dataGroupSize);
+                System.arraycopy(data, MAX_DATA_SIZE * index, dataGroup, 0, dataGroupSize);
+                Log.d(TAG, "print() - Group Data: " + DataTools.byteArrayToHex(dataGroup, true));
+                serialManager.write(packageData(data, dataGroupSize));
+            }
+
+        }
+        else{
+            serialManager.write(packageData(data));
+        }
+    }
+
     public void printText(final String text, final ApiPrintingCallback callback){
+        Log.d(TAG, "printing() - text: " + text);
         // Printing must end with a new line
         final String printingText = text.endsWith("\n") ? text : text + "\n";
+        Log.d(TAG, "printing() - printingText: " + printingText);
 
         Log.d(TAG, "printText()");
         executorService.execute(new Runnable() {
@@ -121,11 +164,10 @@ public class PrinterApi {
                         SystemClock.sleep(200);
                     }
                     // Package and write the commands to the serial port
-                    serialManager.write(packageData(printingText.getBytes("GBK")));
-                    /**
-                     * The printer almost immediately return a 0x02, and only when it is completed
-                     * does it return the 0x08
-                     */
+                    print(printingText.getBytes("GBK"));
+
+                    // The printer almost immediately return a 0x02, and only when it is completed
+                    // does it return the 0x08
                     final long startTime = System.currentTimeMillis();
                     final int MAX_PRINTING_TIME = 30000; // 30 seconds max time to print the text
                     int readSize = serialManager.getReadBufferSize();
