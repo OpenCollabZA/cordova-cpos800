@@ -94,6 +94,9 @@ public class NfcApi {
 	                    callback.failed(new ApiFailure(ERROR_IO, "IO Error while reading card ID"));
 					}
                 }
+				finally{
+					serialManager.closeSerialPort();
+				}
 
                 if(!foundCard) {
 					if(cancelled){

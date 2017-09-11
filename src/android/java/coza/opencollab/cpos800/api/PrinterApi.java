@@ -204,7 +204,6 @@ public class PrinterApi {
                     if(!isDone) {
                         String returnCode = DataTools.byteArrayToHex(serialManager.getReadBuffer(), readSize, true);
                         Log.i(TAG, "Unexpected return code" + returnCode);
-                        serialManager.closeSerialPort();
                         callback.failed(new ApiFailure(ERROR_TIMEOUT, "Unknown printing response code : " + returnCode));
                     }
                 } catch (IOException e) {
@@ -218,6 +217,9 @@ public class PrinterApi {
                         callback.failed(new ApiFailure(ERROR_IO, "IO Error while printing"));
                     }
                 }
+				finally{
+					serialManager.closeSerialPort();
+				}
             }
         });
 

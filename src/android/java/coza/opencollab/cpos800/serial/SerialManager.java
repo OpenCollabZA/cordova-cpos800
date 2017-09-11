@@ -134,6 +134,7 @@ public class SerialManager {
             else if(currentInterface != SerialInterface.NONE){
                 Log.d(TAG, "Other serial connection is currently open, closing");
                 closeSerialPort();
+				SystemClock.sleep(700);
             }
         }
         currentInterface = serialInterface;
@@ -168,25 +169,27 @@ public class SerialManager {
      * Close the serial port.
      */
 	public synchronized void closeSerialPort(){
-        this.readThread.interrupt();
-        this.readThread = null;
-        try {
-            this.outputStream.close();
-        } catch (IOException e) {
-        }
-        try {
-            this.inputStream.close();
-        } catch (IOException e) {
-        }
-        this.serialPort.close();
-        setGPIO(currentInterface, false);
-        if (currentInterface == SerialInterface.PRINTER && isStm32) {
-            setGPIO(SerialInterface.STM32, false);
-        }
-        currentInterface = SerialInterface.NONE;
-        this.outputStream = null;
-        this.inputStream = null;
-        serialPort = null;
+		if(serialPort != null){
+	        this.readThread.interrupt();
+	        this.readThread = null;
+	        try {
+	            this.outputStream.close();
+	        } catch (IOException e) {
+	        }
+	        try {
+	            this.inputStream.close();
+	        } catch (IOException e) {
+	        }
+	        this.serialPort.close();
+	        setGPIO(currentInterface, false);
+	        if (currentInterface == SerialInterface.PRINTER && isStm32) {
+	            setGPIO(SerialInterface.STM32, false);
+	        }
+	        currentInterface = SerialInterface.NONE;
+	        this.outputStream = null;
+	        this.inputStream = null;
+	        serialPort = null;
+		}
 	}
 
     /**
