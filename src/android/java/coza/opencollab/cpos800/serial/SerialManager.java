@@ -134,7 +134,7 @@ public class SerialManager {
             else if(currentInterface != SerialInterface.NONE){
                 Log.d(TAG, "Other serial connection is currently open, closing");
                 closeSerialPort();
-				SystemClock.sleep(700);
+                SystemClock.sleep(700);
             }
         }
         currentInterface = serialInterface;
@@ -168,36 +168,43 @@ public class SerialManager {
     /**
      * Close the serial port.
      */
-	public synchronized void closeSerialPort(){
-		if(serialPort != null){
-	        this.readThread.interrupt();
-	        this.readThread = null;
-	        try {
-	            this.outputStream.close();
-	        } catch (IOException e) {
-	        }
-	        try {
-	            this.inputStream.close();
-	        } catch (IOException e) {
-	        }
-	        this.serialPort.close();
-	        setGPIO(currentInterface, false);
-	        if (currentInterface == SerialInterface.PRINTER && isStm32) {
-	            setGPIO(SerialInterface.STM32, false);
-	        }
-	        currentInterface = SerialInterface.NONE;
-	        this.outputStream = null;
-	        this.inputStream = null;
-	        serialPort = null;
-		}
-	}
+    public synchronized void closeSerialPort(){
+        if(serialPort != null){
+            this.readThread.interrupt();
+            this.readThread = null;
+            try {
+                this.inputStream.close();
+            } catch (IOException e) {
+            }
+            finally {
+                this.inputStream = null;
+            }
+            try {
+                this.outputStream.close();
+            } catch (IOException e) {
+            }
+            finally {
+                this.outputStream = null;
+            }
+
+            this.serialPort.close();
+            this.serialPort = null;
+
+            setGPIO(currentInterface, false);
+            if (currentInterface == SerialInterface.PRINTER && isStm32) {
+                setGPIO(SerialInterface.STM32, false);
+            }
+            currentInterface = SerialInterface.NONE;
+        }
+        this.resetReadBuffer();
+    }
 
     /**
      * Enable/Disable the GPIO configuration for the specified serial interface.
      * @param serialInterface Serial interface to enable/disable
      * @param enable Flag if the interface should be enabled or disable.
      */
-	private void setGPIO(SerialInterface serialInterface, boolean enable){
+    private void setGPIO(SerialInterface serialInterface, boolean enable){
         String gpioFile = null;
         Log.i(TAG, String.format("Setting GPIO for %s to %s", serialInterface.toString(), enable ? "ENABLED" : "DISABLED"));
 
@@ -356,10 +363,13 @@ public class SerialManager {
         public void run() {
             byte[] buffer = new byte[1024];
             while (!isInterrupted()) {
+                // If there is no input stream, there is nothing further for this thread to do
                 if (inputStream == null) {
                     return;
                 }
                 try {
+                    // This read will throw an exception when the input stream is closed while
+                    // waiting for input - that is normal
                     int length = inputStream.read(buffer);
                     if(length > 0) {
                         Log.d(TAG, String.format("Read %d bytes", length));
@@ -369,13 +379,16 @@ public class SerialManager {
                         readBufferSize+= length;
                         Log.d(TAG, "ReadBuffer=" + DataTools.byteArrayToHex(readBuffer, readBufferSize, true));
                     }
-                } catch (IOException e) {
+                }
+                // The nullpointer can happen when the serial port is closed, and we are still trying to read from it
+                catch (NullPointerException e) {
+                    Log.e(TAG, "NullPointerException while reading input stream", e);
+                    return;
+                }catch (IOException e) {
                     Log.e(TAG, "Exception while reading input stream", e);
                     return;
                 }
             }
-            // Close the input stream when the thread stops
-            serialPort.close();
         }
     }
 }

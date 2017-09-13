@@ -4,9 +4,15 @@ root = true
 [*]
 charset = utf-8
 end_of_line = crlf
-indent_style = tab
+indent_style = spaces
 tab_width = 4
 insert_final_newline = true
+
+[*.java]
+indent_style = spaces
+
+[*.xml]
+indent_style = tabs
 
 [.cordova/hooks/before_prepare/000-browserify.js]
 end_of_line = lf
