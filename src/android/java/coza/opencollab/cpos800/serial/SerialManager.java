@@ -74,7 +74,8 @@ public class SerialManager {
     private SerialReadThread readThread;
 
     /**
-     * Buffer of bytes that has been read
+     * Buffer of bytes that has been read.
+     * Size: 50Kb
      */
     private byte[] readBuffer = new byte[50 * 1024];
 
@@ -374,13 +375,19 @@ public class SerialManager {
                     if(length > 0) {
                         Log.d(TAG, String.format("Read %d bytes", length));
 
+                        // If we don't have enough space in our buffer to save the data, we clear it
+                        // and start over
+                        if(length + readBufferSize > readBuffer.length){
+                            Log.d(TAG, "Not enough space in readBuffer for next data, resetting.");
+                            resetReadBuffer();
+                        }
                         // Copy read bytes into buffer
                         System.arraycopy(buffer, 0, readBuffer, readBufferSize, length);
-                        readBufferSize+= length;
+                        readBufferSize += length;
                         Log.d(TAG, "ReadBuffer=" + DataTools.byteArrayToHex(readBuffer, readBufferSize, true));
                     }
                 }
-                // The nullpointer can happen when the serial port is closed, and we are still trying to read from it
+                // The null pointer can happen when the serial port is closed, and we are still trying to read from it
                 catch (NullPointerException e) {
                     Log.e(TAG, "NullPointerException while reading input stream", e);
                     return;
