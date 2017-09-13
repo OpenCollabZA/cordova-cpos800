@@ -62,7 +62,7 @@ public class PrinterApi {
      * @return The packaged instructrion
      */
     private static final byte[] packageData(byte[] sendingData) {
-       return packageData(sendingData, sendingData.length);
+        return packageData(sendingData, sendingData.length);
     }
     /**
      * Package the instructions to send to the printer
@@ -174,8 +174,8 @@ public class PrinterApi {
                     boolean isDone = false;
                     while(  // There is still more time allowed to wait for the response
                             System.currentTimeMillis() - startTime < MAX_PRINTING_TIME &&
-                            // We received the 2 bytes we are waiting for
-                             !isDone) {
+                                    // We received the 2 bytes we are waiting for
+                                    !isDone) {
 
                         readSize = serialManager.getReadBufferSize();
                         if(readSize >= 2) {
@@ -217,9 +217,9 @@ public class PrinterApi {
                         callback.failed(new ApiFailure(ERROR_IO, "IO Error while printing"));
                     }
                 }
-				finally{
-					serialManager.closeSerialPort();
-				}
+                finally{
+                    serialManager.closeSerialPort();
+                }
             }
         });
 
