@@ -39,7 +39,7 @@ public class NfcApi {
 
     private static NfcApi instance;
 
-    private boolean cancelled = false;
+    private volatile boolean cancelled = false;
 
     public static NfcApi getInstance(){
         if(instance == null){
@@ -53,6 +53,15 @@ public class NfcApi {
         callback.success("cancelled");
     }
 
+    private boolean testValidSerial(byte[] data){
+        for (byte aData : data) {
+            if (aData != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void getCardId(final ApiCallback<byte[]> callback){
         executorService.execute(new Runnable() {
             @Override
@@ -61,28 +70,23 @@ public class NfcApi {
                 Log.d(TAG, "getCardId()");
                 final SerialManager serialManager = SerialManager.getInstance();
                 boolean foundCard = false;
+                int length = 0; // Length of the data that we have read
+                final byte[] readBuffer = new byte[1024];
                 try {
                     serialManager.openSerialPort(SerialManager.SerialInterface.NFC);
                     int tries = 50, attempts = 0;
-
-                    final byte[] readBuffer = new byte[1024];
                     SystemClock.sleep(100);
-                    while(!cancelled && !foundCard && attempts < tries) {
+                    while(!cancelled && attempts < tries) {
                         attempts++;
                         serialManager.write(CMD_GET_ID);
-                        // TODO somehow detect if the serial changed to printer and give up
-                        int length = serialManager.read(readBuffer, 500, 100);
+                        length = serialManager.read(readBuffer, 500, 100);
                         if (length < 4 || (length == 4 && readBuffer[0]==8 && readBuffer[1] == 1 && readBuffer[3]==4)) {
-                            // No card read
-                            continue;
+                            length = 0;
                         }
-                        else {
-                            // Copy the data to a new buffer that only contains the read bytes
-                            byte[] data = new byte[length];
-                            System.arraycopy(readBuffer, 0, data, 0, length);
-                            callback.success(data);
-                            foundCard = true;
+                        else{
+                            break;
                         }
+                        // No card read
                     }
                 } catch (IOException e) {
                     if(cancelled){
@@ -98,15 +102,35 @@ public class NfcApi {
                     serialManager.closeSerialPort();
                 }
 
-                if(!foundCard) {
-                    if(cancelled){
-                        Log.i(TAG, "Reading card got cancelled");
-                        callback.failed(new ApiFailure(ERROR_CANCELLED, "Cancelled reading card"));
-                    }
-                    else{
-                        Log.i(TAG, "Timeout reading Tag");
-                        callback.failed(new ApiFailure(ERROR_TIMEOUT, "Timeout reading Tag"));
-                    }
+                if(cancelled){
+                    Log.i(TAG, "Reading card got cancelled");
+                    callback.failed(new ApiFailure(ERROR_CANCELLED, "Cancelled reading card"));
+                    return;
+                }
+
+                // We read way to many bytes to be a legit card serial
+                if(length > 8){
+                    Log.e(TAG, "Serial returned too much data to be a serial number: " + length);
+                    callback.failed(new ApiFailure(ERROR_IO, "IO Error while reading card ID - invalid serial data."));
+                    return;
+                }
+
+                if(length < 4){
+                    Log.i(TAG, "Timeout reading Tag");
+                    callback.failed(new ApiFailure(ERROR_TIMEOUT, "Timeout reading Tag"));
+                    return;
+                }
+
+                // Copy the data to a new buffer that only contains the read bytes
+                byte[] data = new byte[length];
+                System.arraycopy(readBuffer, 0, data, 0, length);
+
+                if(testValidSerial(data)){
+                    callback.success(data);
+                }
+                else{
+                    Log.i(TAG, "Invalid card serial");
+                    callback.failed(new ApiFailure(ERROR_IO, "Invalid card serial"));
                 }
             }
         });
